@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Toss Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ffcc00;
+            --secondary-color: #ffd700;
+            --dark-color: #333;
+            --light-color: #f5f5f5;
+            --win-color: #28a745;
+            --lose-color: #dc3545;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .tab-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: var(--dark-color);
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        
+        .tab.active {
+            background-color: var(--primary-color);
+            color: var(--dark-color);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .toss-container {
+            text-align: center;
+        }
+        
+        .choice-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: var(--dark-color);
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .coin-container {
+            position: relative;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            padding: 20px;
+            perspective: 1000px;
+        }
+        
+        .coin {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            margin: 0 auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
+        }
+        
+        .coin-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .head {
+            transform: rotateY(0deg);
+            background: linear-gradient(45deg, #e6e6ec, #e8e1de);
+            border: 10px solid #3dfe07;
+            z-index: 2;
+        }
+        
+        .tail {
+            transform: rotateY(0deg);
+            background: linear-gradient(45deg, #e6e6ec, #e8e1de);
+            border: 10px solid #0aa9f3;
+            z-index: 2;
+        }
+        
+        .coin-stage {
+            width: 200px;
+            height: 5px;
+            background: linear-gradient(to right, rgba(0,0,0,0.05), rgba(0,0,0,0.2), rgba(0,0,0,0.05));
+            border-radius: 50%;
+            margin-top: 15px;
+            transform: rotateX(70deg);
+        }
+        
+        .choice-indicator {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 15px auto;
+        }
+        
+        .choice-pill {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+            opacity: 0.5;
+        }
+        
+        .choice-pill.active {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .head-pill {
+            background-color: #fff7cc;
+            color: #B8860B;
+            border: 2px solid #ffcc00;
+        }
+        
+        .tail-pill {
+            background-color: #fff7cc;
+            color: #B8860B;
+            border: 2px solid #ffcc00;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            text-align: center;
+            min-height: 100px;
+        }
+        
+        .result-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .outcome-text {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .win {
+            color: var(--win-color);
+        }
+        
+        .lose {
+            color: var(--lose-color);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            height: 300px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th {
+            background-color: var(--primary-color);
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .history-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .history-table .win {
+            color: var(--win-color);
+            font-weight: bold;
+        }
+        
+        .history-table .lose {
+            color: var(--lose-color);
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .export-btn {
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .choice-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .coin {
+                width: 120px;
+                height: 120px;
+            }
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #dc3545;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .unfair-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .unfair-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .unfair-btn.active {
+            background-color: #721c24;
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.5);
+        }
+        
+        .unfair-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ffeeee;
+            border: 2px dashed #dc3545;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .hidden-side {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Coin Toss Simulator 🪙</h1>
+            <p>A fair coin toss with beautiful animation</p>
+        </header>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="toss">Toss Coin</div>
+                <div class="tab" data-tab="stats">Statistics</div>
+                <div class="tab" data-tab="about">About</div>
+            </div>
+            
+            <div class="tab-content active" id="toss">
+                <div class="toss-container">
+                    <h2>Toss a Fair Coin</h2>
+                    
+                    <div id="choice-section">
+                        <h3>Choose your prediction:</h3>
+                        <div class="choice-container">
+                            <button id="head-btn">HEAD</button>
+                            <button id="tail-btn">TAIL</button>
+                        </div>
+                    </div>
+                    
+                    <div class="coin-container">
+                        <!-- Choice indicators -->
+                        <div class="choice-indicator">
+                            <div id="head-indicator" class="choice-pill head-pill">HEAD</div>
+                            <div id="tail-indicator" class="choice-pill tail-pill">TAIL</div>
+                        </div>
+                        
+                        <!-- Actual coin -->
+                        <div class="coin">
+                            <div class="coin-side head">
+                                <div style="font-size: 2.5rem; color: #B8860B; font-weight: bold;">H</div>
+                                <!-- <div style="position: absolute; top: 10px; right: 10px; font-size: 18px; color: #B8860B;">HEAD</div> -->
+                            </div>
+                            <div class="coin-side tail">
+                                <div style="font-size: 2.5rem; color: #B8860B; font-weight: bold;">T</div>
+                                <!-- <div style="position: absolute; top: 10px; right: 10px; font-size: 18px; color: #B8860B;">TAIL</div> -->
+                            </div>
+                        </div>
+                        
+                        <!-- Shadow/stage for the coin -->
+                        <div class="coin-stage"></div>
+                    </div>
+                    
+                    <div class="result-container">
+                        <div id="result-text" class="result-text"></div>
+                        <div id="outcome-text" class="outcome-text"></div>
+                    </div>
+                    
+                    <button id="toss-again-btn" style="display: none;">Toss Again</button>
+                    
+                    <div id="unfair-controls" class="unfair-container">
+                        <h4 style="color: #dc3545; margin-top: 0;">⚠️ Unfair Coin Mode ⚠️</h4>
+                        <p>This mode lets you control the outcome of the coin toss.</p>
+                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                            <label class="switch" style="margin-right: 10px;">
+                                <input type="checkbox" id="unfair-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span id="unfair-status">Fair Coin (50/50 chance)</span>
+                        </div>
+                        <div id="unfair-options" style="margin-top: 15px; display: none;">
+                            <p>Force the coin to always land on:</p>
+                            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                                <button id="force-head" class="unfair-btn">Always head</button>
+                                <button id="force-tail" class="unfair-btn">Always tail</button>
+                                <button id="force-win" class="unfair-btn">Always Win</button>
+                                <button id="force-lose" class="unfair-btn">Always Lose</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="stats">
+                <h2>Statistics</h2>
+                
+                <div id="no-stats" style="text-align: center; margin: 30px;">
+                    <p>No toss history yet. Play a few rounds to see statistics!</p>
+                </div>
+                
+                <div id="stats-content" style="display: none;">
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <h3>Total Tosses</h3>
+                            <div id="total-tosses" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Wins</h3>
+                            <div id="total-wins" class="stat-value">0 (0%)</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Head</h3>
+                            <div id="total-head" class="stat-value">0 (0%)</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Tail</h3>
+                            <div id="total-tail" class="stat-value">0 (0%)</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Win/Loss Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="stats-chart"></canvas>
+                    </div>
+                    
+                    <h3>Recent Tosses</h3>
+                    <div class="table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Choice</th>
+                                    <th>Result</th>
+                                    <th>Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- History rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <button id="export-btn" class="export-btn">Export History to CSV</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="about">
+                <h2>About This App</h2>
+                
+                <div style="margin: 20px 0;">
+                    <h3>Professional Coin Toss Simulator</h3>
+                    <p>This is a fair and fun coin toss simulator with beautiful animations and statistics tracking.</p>
+                    
+                    <h4 style="margin-top: 20px;">Features:</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Fair Toss:</strong> Uses cryptographically secure random number generation</li>
+                        <li><strong>Beautiful Animation:</strong> Visual feedback of the coin flip</li>
+                        <li><strong>Statistics:</strong> Track your wins, losses, and distribution of head/tail</li>
+                        <li><strong>History:</strong> Review all your past tosses</li>
+                        <li><strong>Export:</strong> Download your toss history as a CSV file</li>
+                        <li><strong>Secret Feature:</strong> Type "unfair" to unlock a special mode</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 20px;">How It Works:</h4>
+                    <p>
+                        The simulator uses JavaScript's <code>crypto.getRandomValues()</code> which relies on your operating system's 
+                        source of randomness to ensure that each toss is truly random and unpredictable.
+                    </p>
+                    
+                    <h4 style="margin-top: 20px;">GitHub Repository:</h4>
+                    <p>
+                        This app is open source! Check out the code and contribute at:
+                        <a href="https://github.com/algsoch/coin-toss-simulator" target="_blank">GitHub Repository</a>
+                    </p>
+                    
+                    <h4 style="margin-top: 20px;">Created By:</h4>
+                    <p>Made with ❤️ by vicky kumar</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            &copy; 2025 Coin Toss Simulator | <a href="https://github.com/algsoch/coin-toss-simulator" target="_blank">GitHub</a>
+        </footer>
+    </div>
+    
+    <!-- Chart.js for statistics visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+    // Global variables
+    let tossHistory = [];
+    let userChoice = null;
+    let tossResult = null;
+    let isFlipping = false;
+    let isFairCoin = true;
+    let secretUnlocked = false;
+    let unfairMode = null;
+    
+    // Elements
+    let coin = document.querySelector('.coin');
+    const resultText = document.getElementById('result-text');
+    const outcomeText = document.getElementById('outcome-text');
+    const headBtn = document.getElementById('head-btn');
+    const tailBtn = document.getElementById('tail-btn');
+    const tossAgainBtn = document.getElementById('toss-again-btn');
+    const choiceSection = document.getElementById('choice-section');
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const exportBtn = document.getElementById('export-btn');
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load history from localStorage
+        loadHistory();
+        
+        // Set up event listeners
+        headBtn.addEventListener('click', () => startToss('head'));
+        tailBtn.addEventListener('click', () => startToss('tail'));
+        tossAgainBtn.addEventListener('click', resetToss);
+        exportBtn.addEventListener('click', exportHistory);
+        
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Switch tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = tab.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+                
+                // Update statistics if stats tab
+                if (tabName === 'stats') {
+                    updateStatistics();
+                }
+            });
+        });
+        
+        // Secret key sequence detection
+        let keySequence = [];
+        const secretCode = 'unfair';
+        
+        document.addEventListener('keydown', function(e) {
+            // Add the key to the sequence
+            keySequence.push(e.key.toLowerCase());
+            
+            // Keep only the last 6 keys (length of "unfair")
+            if (keySequence.length > secretCode.length) {
+                keySequence.shift();
+            }
+            
+            // Check if the sequence matches the secret code
+            if (keySequence.join('') === secretCode) {
+                unlockUnfairCoin();
+            }
+        });
+        
+        // Set up unfair coin controls
+        const unfairToggle = document.getElementById('unfair-toggle');
+        const unfairStatus = document.getElementById('unfair-status');
+        const unfairOptions = document.getElementById('unfair-options');
+        const forceheadBtn = document.getElementById('force-head');
+        const forcetailBtn = document.getElementById('force-tail');
+        const forceWinBtn = document.getElementById('force-win');
+        const forceLoseBtn = document.getElementById('force-lose');
+        
+        // Set up unfair mode toggle if it exists
+        if (unfairToggle) {
+            unfairToggle.addEventListener('change', function() {
+                isFairCoin = !this.checked;
+                unfairStatus.textContent = isFairCoin ? 
+                    'Fair Coin (50/50 chance)' : 
+                    'Unfair Coin (rigged outcome)';
+                    
+                unfairOptions.style.display = this.checked ? 'block' : 'none';
+                
+                // Reset active buttons when toggling off
+                if (isFairCoin) {
+                    document.querySelectorAll('.unfair-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    unfairMode = null;
+                }
+            });
+        }
+        
+        // Set up force buttons if they exist
+        if (forceheadBtn) {
+            forceheadBtn.addEventListener('click', function() {
+                setActiveUnfairButton(this);
+                unfairMode = 'head';
+            });
+        }
+        
+        if (forcetailBtn) {
+            forcetailBtn.addEventListener('click', function() {
+                setActiveUnfairButton(this);
+                unfairMode = 'tail';
+            });
+        }
+        
+        if (forceWinBtn) {
+            forceWinBtn.addEventListener('click', function() {
+                setActiveUnfairButton(this);
+                unfairMode = 'win';
+            });
+        }
+        
+        if (forceLoseBtn) {
+            forceLoseBtn.addEventListener('click', function() {
+                setActiveUnfairButton(this);
+                unfairMode = 'lose';
+            });
+        }
+        
+        // Initial stats update
+        updateStatistics();
+    });
+    
+    function unlockUnfairCoin() {
+        if (!secretUnlocked) {
+            // Prompt for password
+            const password = prompt("Enter password to unlock unfair coin feature:", "");
+            
+            // Check password (simple example - 'secret123')
+            if (password === 'secret123') {
+                secretUnlocked = true;
+                
+                // Add unfair controls content if it doesn't have it
+                const unfairControls = document.getElementById('unfair-controls');
+                if (unfairControls && unfairControls.children.length <= 2) {
+                    unfairControls.innerHTML = `
+                        <h4 style="color: #dc3545; margin-top: 0;">⚠️ Unfair Coin Mode ⚠️</h4>
+                        <p>This mode lets you control the outcome of the coin toss.</p>
+                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                            <label class="switch" style="margin-right: 10px;">
+                                <input type="checkbox" id="unfair-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span id="unfair-status">Fair Coin (50/50 chance)</span>
+                        </div>
+                        <div id="unfair-options" style="margin-top: 15px; display: none;">
+                            <p>Force the coin to always land on:</p>
+                            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                                <button id="force-head" class="unfair-btn">Always head</button>
+                                <button id="force-tail" class="unfair-btn">Always tail</button>
+                                <button id="force-win" class="unfair-btn">Always Win</button>
+                                <button id="force-lose" class="unfair-btn">Always Lose</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Set up the toggle and buttons again
+                    const unfairToggle = document.getElementById('unfair-toggle');
+                    const unfairStatus = document.getElementById('unfair-status');
+                    const unfairOptions = document.getElementById('unfair-options');
+                    const forceheadBtn = document.getElementById('force-head');
+                    const forcetailBtn = document.getElementById('force-tail');
+                    const forceWinBtn = document.getElementById('force-win');
+                    const forceLoseBtn = document.getElementById('force-lose');
+                    
+                    if (unfairToggle) {
+                        unfairToggle.addEventListener('change', function() {
+                            isFairCoin = !this.checked;
+                            unfairStatus.textContent = isFairCoin ? 
+                                'Fair Coin (50/50 chance)' : 
+                                'Unfair Coin (rigged outcome)';
+                                
+                            unfairOptions.style.display = this.checked ? 'block' : 'none';
+                            
+                            // Reset active buttons when toggling off
+                            if (isFairCoin) {
+                                document.querySelectorAll('.unfair-btn').forEach(btn => {
+                                    btn.classList.remove('active');
+                                });
+                                unfairMode = null;
+                            }
+                        });
+                    }
+                    
+                    if (forceheadBtn) {
+                        forceheadBtn.addEventListener('click', function() {
+                            setActiveUnfairButton(this);
+                            unfairMode = 'head';
+                        });
+                    }
+                    
+                    if (forcetailBtn) {
+                        forcetailBtn.addEventListener('click', function() {
+                            setActiveUnfairButton(this);
+                            unfairMode = 'tail';
+                        });
+                    }
+                    
+                    if (forceWinBtn) {
+                        forceWinBtn.addEventListener('click', function() {
+                            setActiveUnfairButton(this);
+                            unfairMode = 'win';
+                        });
+                    }
+                    
+                    if (forceLoseBtn) {
+                        forceLoseBtn.addEventListener('click', function() {
+                            setActiveUnfairButton(this);
+                            unfairMode = 'lose';
+                        });
+                    }
+                }
+                
+                // Show the unfair coin controls
+                unfairControls.style.display = 'block';
+                
+                // Alert the user
+                alert('Unfair coin mode unlocked! Use with caution.');
+            } else if (password !== null) {
+                alert('Incorrect password');
+            }
+        }
+    }
+    
+    function setActiveUnfairButton(button) {
+        // Remove active class from all buttons
+        document.querySelectorAll('.unfair-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        button.classList.add('active');
+    }
+    
+    // Start the coin toss
+    function startToss(choice) {
+        if (isFlipping) return;
+        
+        console.log("Starting toss with choice:", choice);
+        isFlipping = true;
+        userChoice = choice;
+        
+        // Highlight the selected choice indicator
+        document.getElementById('head-indicator').classList.toggle('active', choice === 'head');
+        document.getElementById('tail-indicator').classList.toggle('active', choice === 'tail');
+        
+        // Show what the user chose
+        resultText.innerHTML = `<span style="color:#666;">You chose: <strong>${choice.toUpperCase()}</strong></span>`;
+        outcomeText.textContent = 'Flipping...';
+        outcomeText.className = 'outcome-text';
+        
+        // Disable buttons during animation
+        headBtn.disabled = true;
+        tailBtn.disabled = true;
+        
+        // Determine result
+        if (isFairCoin) {
+            tossResult = getCryptoRandom(0, 1) === 0 ? 'head' : 'tail';
+        } else {
+            // Use the selected unfair mode
+            switch (unfairMode) {
+                case 'head':
+                    tossResult = 'head';
+                    break;
+                case 'tail':
+                    tossResult = 'tail';
+                    break;
+                case 'win':
+                    tossResult = choice; // Match user's choice
+                    break;
+                case 'lose':
+                    tossResult = choice === 'head' ? 'tail' : 'head'; // Opposite of user's choice
+                    break;
+                default:
+                    // If no unfair mode selected, just use random
+                    tossResult = getCryptoRandom(0, 1) === 0 ? 'head' : 'tail';
+            }
+        }
+        
+        console.log("Toss result determined:", tossResult);
+        
+        // Start animation
+        simpleFlipAnimation();
+        
+        // Wait for animation to complete
+        setTimeout(() => {
+            endToss();
+        }, 3000);
+    }
+
+    // New function - simple but reliable flip animation
+    function simpleFlipAnimation() {
+        // Add status elements for the animation
+        const statusElem = document.createElement('div');
+        statusElem.id = 'flip-status';
+        statusElem.style.marginTop = '10px';
+        statusElem.style.fontSize = '14px';
+        statusElem.style.color = '#666';
+        statusElem.textContent = 'Flipping coin...';
+        
+        const progressContainer = document.createElement('div');
+        progressContainer.style.width = '200px';
+        progressContainer.style.height = '4px';
+        progressContainer.style.backgroundColor = '#eee';
+        progressContainer.style.borderRadius = '2px';
+        progressContainer.style.margin = '8px auto';
+        
+        const progressBar = document.createElement('div');
+        progressBar.id = 'flip-progress';
+        progressBar.style.width = '0%';
+        progressBar.style.height = '100%';
+        progressBar.style.backgroundColor = '#ffcc00';
+        progressBar.style.borderRadius = '2px';
+        progressBar.style.transition = 'width 3s linear';
+        
+        progressContainer.appendChild(progressBar);
+        
+        // Add to DOM if not already present
+        if (!document.getElementById('flip-status')) {
+            document.querySelector('.coin-container').appendChild(statusElem);
+            document.querySelector('.coin-container').appendChild(progressContainer);
+        } else {
+            document.getElementById('flip-status').textContent = 'Flipping coin...';
+            document.getElementById('flip-progress').style.width = '0%';
+        }
+        
+        // Completely replace the coin display for complete control
+        replaceCoinWithResult();
+        
+        // Flip the coin several times quickly
+        let flipCount = 0;
+        const maxFlips = 16;
+        const flipInterval = setInterval(() => {
+            flipCount++;
+            
+            if (flipCount < maxFlips) {
+                // During animation, alternate between head and tail
+                const isheadShowing = flipCount % 2 === 0;
+                showCoinSide(isheadShowing ? 'head' : 'tail');
+            } else {
+                // On the last flip, show the actual result
+                clearInterval(flipInterval);
+                showCoinSide(tossResult);
+            }
+        }, 150); // Speed decreases as count increases
+        
+        // Animate progress bar
+        setTimeout(() => {
+            document.getElementById('flip-progress').style.width = '100%';
+        }, 50);
+        
+        // Update status text during animation
+        let dots = '';
+        const statusInterval = setInterval(() => {
+            dots = dots.length >= 3 ? '' : dots + '.';
+            const status = document.getElementById('flip-status');
+            if (status) {
+                status.textContent = 'Flipping coin' + dots;
+            }
+        }, 200);
+        
+        // Clear interval when animation completes
+        setTimeout(() => {
+            clearInterval(statusInterval);
+            const status = document.getElementById('flip-status');
+            if (status) {
+                status.textContent = 'Coin landed!';
+            }
+        }, 2900);
+    }
+
+    // Helper function to create a completely new coin with the correct result
+    function replaceCoinWithResult() {
+        // Save reference to the original coin container
+        const coinContainer = document.querySelector('.coin-container');
+        
+        // Remove the existing coin
+        const oldCoin = document.querySelector('.coin');
+        if (oldCoin) {
+            oldCoin.remove();
+        }
+                        // <div style="position: absolute; top: 10px; right: 10px; font-size: 18px; color: #B8860B;">TAIL</div>
+                // <div style="position: absolute; top: 10px; right: 10px; font-size: 18px; color: #B8860B;">HEAD</div>
+
+        
+        // Create a new coin display
+        const newCoin = document.createElement('div');
+        newCoin.className = 'coin';
+        newCoin.innerHTML = `
+            <div class="coin-side head">
+                <div style="font-size: 2.5rem; color: #B8860B; font-weight: bold;">H</div>
+            </div>
+            <div class="coin-side tail">
+                <div style="font-size: 2.5rem; color: #B8860B; font-weight: bold;">T</div>
+            </div>
+        `;
+        
+        // Find coin stage
+        const coinStage = document.querySelector('.coin-stage');
+        
+        // Add the new coin before the coin stage
+        if (coinStage) {
+            coinContainer.insertBefore(newCoin, coinStage);
+        } else {
+            coinContainer.appendChild(newCoin);
+        }
+        
+        // Set global coin reference to the new coin
+        coin = newCoin;
+    }
+
+    // Helper function to directly show a specific coin side
+    function showCoinSide(side) {
+        if (!coin) return;
+        
+        // Get the sides
+        const headSide = coin.querySelector('.head');
+        const tailSide = coin.querySelector('.tail');
+        
+        if (!headSide || !tailSide) return;
+        
+        if (side === 'head') {
+            coin.style.transform = 'rotateY(0deg)';
+            headSide.style.zIndex = '2';
+            headSide.style.opacity = '1';
+            tailSide.style.zIndex = '1';
+            tailSide.style.opacity = '0';
+        } else {
+            coin.style.transform = 'rotateY(180deg)';
+            headSide.style.zIndex = '1';
+            headSide.style.opacity = '0';
+            tailSide.style.zIndex = '2';
+            tailSide.style.opacity = '1';
+        }
+    }
+
+    function endToss() {
+        isFlipping = false;
+        
+        // Ensure the coin shows the correct result
+        showCoinSide(tossResult);
+        
+        // Make result indicators clear
+        document.getElementById('head-indicator').style.opacity = tossResult === 'head' ? '1' : '0.5';
+        document.getElementById('tail-indicator').style.opacity = tossResult === 'tail' ? '1' : '0.5';
+        
+        // Remove status and progress elements
+        setTimeout(() => {
+            const statusElem = document.getElementById('flip-status');
+            const progressContainer = document.getElementById('flip-progress')?.parentNode;
+            
+            if (statusElem) statusElem.parentNode.removeChild(statusElem);
+            if (progressContainer) progressContainer.parentNode.removeChild(progressContainer);
+        }, 1000);
+        
+        // Show result with clear comparison to user's choice
+        resultText.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <span style="display: inline-block; width: 45%; text-align: center; padding: 5px; background: #f0f0f0; border-radius: 5px; margin-right: 5px;">
+                    Your choice: <strong>${userChoice.toUpperCase()}</strong>
+                </span>
+                <span style="display: inline-block; width: 45%; text-align: center; padding: 5px; background: #fff7cc; border-radius: 5px;">
+                    Result: <strong>${tossResult.toUpperCase()}</strong>
+                </span>
+            </div>
+        `;
+        
+        // Determine win/lose
+        const isWin = userChoice === tossResult;
+        outcomeText.textContent = isWin ? 'You win! 🎉' : 'You lose! 😢';
+        outcomeText.className = `outcome-text ${isWin ? 'win' : 'lose'}`;
+        
+        // Add explanation text
+        const explanationDiv = document.createElement('div');
+        explanationDiv.style.fontSize = '14px';
+        explanationDiv.style.marginTop = '10px';
+        explanationDiv.style.color = '#666';
+        
+        if (isWin) {
+            explanationDiv.innerHTML = `Your prediction <strong>${userChoice.toUpperCase()}</strong> matched the coin flip result <strong>${tossResult.toUpperCase()}</strong>. Congratulations!`;
+        } else {
+            explanationDiv.innerHTML = `Your prediction <strong>${userChoice.toUpperCase()}</strong> didn't match the coin flip result <strong>${tossResult.toUpperCase()}</strong>. Better luck next time!`;
+        }
+        
+        // Add explanation under the outcome
+        if (!document.querySelector('.toss-explanation')) {
+            explanationDiv.className = 'toss-explanation';
+            outcomeText.parentNode.insertBefore(explanationDiv, outcomeText.nextSibling);
+        } else {
+            document.querySelector('.toss-explanation').innerHTML = explanationDiv.innerHTML;
+        }
+        
+        // Show toss again button
+        tossAgainBtn.style.display = 'inline-block';
+        choiceSection.style.display = 'none';
+        
+        // Save result
+        saveTossResult(userChoice, tossResult);
+    }
+
+    function resetToss() {
+        console.log("Resetting toss");
+        
+        // Reset choice indicators
+        document.getElementById('head-indicator').classList.remove('active');
+        document.getElementById('tail-indicator').classList.remove('active');
+        document.getElementById('head-indicator').style.opacity = '0.5';
+        document.getElementById('tail-indicator').style.opacity = '0.5';
+        
+        // Hide result and show choice section
+        tossAgainBtn.style.display = 'none';
+        choiceSection.style.display = 'block';
+        
+        // Clear result text
+        resultText.textContent = '';
+        outcomeText.textContent = '';
+        
+        // Remove explanation if it exists
+        const explanation = document.querySelector('.toss-explanation');
+        if (explanation) {
+            explanation.parentNode.removeChild(explanation);
+        }
+        
+        // Reset the coin to show head by default
+        replaceCoinWithResult();
+        showCoinSide('head');
+        
+        // Enable buttons
+        headBtn.disabled = false;
+        tailBtn.disabled = false;
+    }
+    
+    // Get cryptographically secure random number
+    function getCryptoRandom(min, max) {
+        const range = max - min + 1;
+        const bytesNeeded = Math.ceil(Math.log2(range) / 8);
+        const maxValue = Math.pow(256, bytesNeeded);
+        const array = new Uint8Array(bytesNeeded);
+        
+        let value;
+        do {
+            window.crypto.getRandomValues(array);
+            value = 0;
+            for (let i = 0; i < bytesNeeded; i++) {
+                value = (value * 256) + array[i];
+            }
+        } while (value >= maxValue - (maxValue % range));
+        
+        return min + (value % range);
+    }
+    
+    // Save toss result to history
+    function saveTossResult(choice, result) {
+        const timestamp = new Date().toISOString();
+        const win = choice === result;
+        
+        const toss = {
+            timestamp,
+            choice,
+            result,
+            win,
+            fair: isFairCoin // Track if the toss was fair
+        };
+        
+        tossHistory.push(toss);
+        saveHistory();
+        updateStatistics();
+    }
+    
+    // Save history to localStorage
+    function saveHistory() {
+        localStorage.setItem('coinTossHistory', JSON.stringify(tossHistory));
+    }
+    
+    // Load history from localStorage
+    function loadHistory() {
+        const savedHistory = localStorage.getItem('coinTossHistory');
+        if (savedHistory) {
+            try {
+                tossHistory = JSON.parse(savedHistory);
+            } catch (e) {
+                tossHistory = [];
+            }
+        }
+    }
+    
+    // Update statistics display
+    function updateStatistics() {
+        const totalTosses = tossHistory.length;
+        
+        if (totalTosses === 0) {
+            document.getElementById('no-stats').style.display = 'block';
+            document.getElementById('stats-content').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('no-stats').style.display = 'none';
+        document.getElementById('stats-content').style.display = 'block';
+        
+        // Calculate stats
+        const wins = tossHistory.filter(toss => toss.win).length;
+        const head = tossHistory.filter(toss => toss.result === 'head').length;
+        const tail = totalTosses - head;
+        
+        const winPercentage = (wins / totalTosses) * 100;
+        const headPercentage = (head / totalTosses) * 100;
+        const tailPercentage = (tail / totalTosses) * 100;
+        
+        // Update stats display
+        document.getElementById('total-tosses').textContent = totalTosses;
+        document.getElementById('total-wins').textContent = `${wins} (${winPercentage.toFixed(1)}%)`;
+        document.getElementById('total-head').textContent = `${head} (${headPercentage.toFixed(1)}%)`;
+        document.getElementById('total-tail').textContent = `${tail} (${tailPercentage.toFixed(1)}%)`;
+        
+        // Update chart
+        updateChart(winPercentage, 100 - winPercentage, headPercentage, tailPercentage);
+        
+        // Update history table
+        updateHistoryTable();
+    }
+    
+    // Update the statistics chart
+    function updateChart(winPercentage, lossPercentage, headPercentage, tailPercentage) {
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        
+        // Check if chart already exists and destroy it
+        if (window.statsChart) {
+            window.statsChart.destroy();
+        }
+        
+        // Create new chart
+        window.statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Wins', 'Losses', 'head', 'tail'],
+                datasets: [{
+                    label: 'Percentage (%)',
+                    data: [winPercentage, lossPercentage, headPercentage, tailPercentage],
+                    backgroundColor: [
+                        '#28a745',
+                        '#dc3545',
+                        '#ffd700',
+                        '#ffd700'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Update the history table
+    function updateHistoryTable() {
+        const tableBody = document.getElementById('history-table-body');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = '';
+        
+        // Get the most recent tosses (up to 20)
+        const recentTosses = [...tossHistory].reverse().slice(0, 20);
+        
+        for (const toss of recentTosses) {
+            const row = document.createElement('tr');
+            
+            // Create date and time
+            const date = new Date(toss.timestamp);
+            const dateStr = date.toLocaleDateString();
+            const timeStr = date.toLocaleTimeString();
+            
+            // Create cells
+            const dateCell = document.createElement('td');
+            dateCell.textContent = dateStr;
+            
+            const timeCell = document.createElement('td');
+            timeCell.textContent = timeStr;
+            
+            const choiceCell = document.createElement('td');
+            choiceCell.textContent = toss.choice.charAt(0).toUpperCase() + toss.choice.slice(1);
+            
+            const resultCell = document.createElement('td');
+            resultCell.textContent = toss.result.charAt(0).toUpperCase() + toss.result.slice(1);
+            
+            // Add indicator if toss was unfair
+            if (toss.fair === false) {
+                resultCell.innerHTML += ' <span style="color:#dc3545;font-size:11px;margin-left:4px;">(rigged)</span>';
+            }
+            
+            const outcomeCell = document.createElement('td');
+            const outcomeText = toss.win ? 'Win' : 'Loss';
+            outcomeCell.textContent = outcomeText;
+            outcomeCell.className = toss.win ? 'win' : 'lose';
+            
+            // Add cells to row
+            row.appendChild(dateCell);
+            row.appendChild(timeCell);
+            row.appendChild(choiceCell);
+            row.appendChild(resultCell);
+            row.appendChild(outcomeCell);
+            
+            // Add row to table
+            tableBody.appendChild(row);
+        }
+    }
+    
+    // Export history to CSV
+    function exportHistory() {
+        if (tossHistory.length === 0) {
+            alert('No history to export!');
+            return;
+        }
+        
+        // Create CSV content
+        let csvContent = 'Date,Time,Choice,Result,Outcome,Fair\n';
+        
+        for (const toss of tossHistory) {
+            const date = new Date(toss.timestamp);
+            const dateStr = date.toLocaleDateString();
+            const timeStr = date.toLocaleTimeString();
+            const choice = toss.choice.charAt(0).toUpperCase() + toss.choice.slice(1);
+            const result = toss.result.charAt(0).toUpperCase() + toss.result.slice(1);
+            const outcome = toss.win ? 'Win' : 'Loss';
+            const fair = toss.fair === false ? 'No' : 'Yes';
+            
+            csvContent += `${dateStr},${timeStr},${choice},${result},${outcome},${fair}\n`;
+        }
+        
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'coin_toss_history.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    </script>
+</body>
+</html>
